@@ -12,7 +12,8 @@
 param (
   [string]$password = "",
   [string]$profile_file = $null,
-  [switch]$norestart
+  [switch]$norestart,
+  [switch]$ignore_space
 )
 
 function Set-EnvironmentVariableWrap([string] $key, [string] $value)
@@ -268,7 +269,10 @@ if (-Not (((Get-WmiObject -class Win32_OperatingSystem).Version -eq "6.1.7601") 
 Write-Host "[+] Checking for available diskspace"
 $disk = Get-PSDrive ${Env:SystemDrive}[0]
 Start-Sleep -Seconds 1
-if (-Not (($disk.free)/1Gb -gt 40)) {
+if (-Not (($disk.free)/1Gb -gt 40) -And $ignore_space) {
+  Write-Host -ForegroundColor Red "`t[!] Continuing even though you have less than 40gb of free diskspace ..."
+  }
+elseif (-Not (($disk.free)/1Gb -gt 40) -And -Not $ignore_space) {
   Write-Host -ForegroundColor Yellow -NoNewline "`t[WRN} Warning: You have less than 40Gb of free diskspace left. Are you sure you want to continue? (Y/N) "
   $response = Read-Host
   if ($response -ne "Y") {
